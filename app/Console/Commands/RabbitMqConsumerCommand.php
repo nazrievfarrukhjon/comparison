@@ -2,29 +2,34 @@
 
 namespace App\Console\Commands;
 
+use Exception;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Log;
 
 class RabbitMqConsumerCommand extends Command
 {
-    /**
-     * The name and signature of the console command.
-     *
-     * @var string
-     */
-    protected $signature = 'app:rabbit-mq-consumer-command';
 
-    /**
-     * The console command description.
-     *
-     * @var string
-     */
-    protected $description = 'Command description';
+    protected $signature = 'consume';
 
-    /**
-     * Execute the console command.
-     */
-    public function handle()
+    protected $description = '';
+
+    public function __construct()
     {
-        //
+        parent::__construct();
     }
+
+    /**
+     * @throws Exception
+     */
+    public function handle(): void
+    {
+        try {
+            RabbitMQConsumer::init()
+                ->consumeFromRegularQueue();
+        } catch (Exception $e) {
+            Log::info(['temp_start_rabbitmq', $e->getMessage()]);
+        }
+
+    }
+
 }
