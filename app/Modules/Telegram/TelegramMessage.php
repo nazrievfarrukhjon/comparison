@@ -2,7 +2,7 @@
 
 namespace App\Modules\Telegram;
 
-class Telegram
+class TelegramMessage
 {
 
     public function __construct(...$params)

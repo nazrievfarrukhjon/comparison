@@ -3,7 +3,7 @@
 namespace App\Modules\ElasticSearch;
 
 use App\Modules\Blacklist\BlacklistESConfigs;
-use App\Modules\Telegram\Telegram;
+use App\Modules\Telegram\TelegramMessage;
 use GuzzleHttp\Client as Guzzle;
 use GuzzleHttp\Exception\GuzzleException;
 use Illuminate\Http\JsonResponse;
@@ -329,7 +329,7 @@ class ElasticSearch
     /**
      * @throws GuzzleException
      */
-    public function deleteDocByTerrId(string $terrId): void
+    public function deleteDocByBlacklistId(string $BlacklistId): void
     {
         $response = $this->guzzle->get(
             "{$this->hostPort}/{$this->blacklistESConfigs->indexName()}/_search",
@@ -337,7 +337,7 @@ class ElasticSearch
                 'json' => [
                     'query' => [
                         'term' => [
-                            'terr_id' => $terrId,
+                            'Blacklist_id' => $BlacklistId,
                         ],
                     ],
                 ],
@@ -347,7 +347,7 @@ class ElasticSearch
         $blacklist = json_decode($response->getBody(), true);
 
         if ($blacklist['hits']['total']['value'] === 0) {
-            $telegram = new Telegram(['body' => 'delete by terr id. no doc found in ES by terr id. ' . $terrId]);
+            $telegram = new TelegramMessage(['body' => 'delete by Blacklist id. no doc found in ES by Blacklist id. ' . $BlacklistId]);
             $telegram->message();
             $telegram->send();
         } else {
