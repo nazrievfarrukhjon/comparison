@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Modules\Telegram\Telegram;
+use App\Modules\Telegram\TelegramMessage;
 use GuzzleHttp\Client as Guzzle;
 use GuzzleHttp\Exception\GuzzleException;
 use Illuminate\Console\Command;
@@ -24,7 +24,7 @@ class TelegramPusherCommand extends Command
     public function handle(): void
     {
         while (true) {
-            $telegrams = Telegram::query()
+            $telegrams = TelegramMessage::query()
                 ->limit(10)
                 ->get()
                 ->each(function ($telegram) {
@@ -35,7 +35,7 @@ class TelegramPusherCommand extends Command
                             [
                                 'form_params' => [
                                     'chat_id' => config(
-                                        'environments.SUSPICIOUS_CHAT_ID'
+                                        'environments.BL_CHAT_ID'
                                     ),
                                     'text' => $telegram->body,
                                 ]
