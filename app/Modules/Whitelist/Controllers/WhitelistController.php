@@ -5,10 +5,11 @@ namespace App\Modules\Blacklist\Controllers;
 use App\Http\Controllers\Controller;
 use App\Modules\Blacklist\BlacklistEntity;
 use App\Modules\Blacklist\Requests\CompareToBlacklistRequest;
+use App\Modules\Whitelist\WhitelistEntity;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
-class BlacklistController extends Controller
+class WhitelistController extends Controller
 {
     /**
      * @OA\Post(
@@ -67,7 +68,7 @@ class BlacklistController extends Controller
      */
     public function find(CompareToBlacklistRequest $request): JsonResponse
     {
-        $blacklistEntity = new BlacklistEntity($request->search_key);
+        $blacklistEntity = new WhitelistEntity($request->search_key);
         $blacklistEntity->find();
         $similarity = $blacklistEntity->similarity();
 
@@ -93,6 +94,5 @@ class BlacklistController extends Controller
     {
 
     }
-
 
 }

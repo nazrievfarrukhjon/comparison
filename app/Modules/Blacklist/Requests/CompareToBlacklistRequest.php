@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Modules\Whitelist\Requests;
+namespace App\Modules\Blacklist\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 

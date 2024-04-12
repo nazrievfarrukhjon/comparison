@@ -4,22 +4,32 @@ namespace App\Modules\Blacklist;
 
 class BlacklistEntity
 {
-    private array $comparison;
+    public function __construct(private string $searchKey)
+    {
 
-    public function find(string $searchKey): void
+    }
+
+    private array $similarity;
+
+    public function find(): void
     {
 
         $elasticSearch = new ElasticSearch(
             new ESRequest(
                 new BlacklistES(
-                    new SearchKeyword($searchKey)
+                    new SearchKeyword($this->searchKey)
                 )
             )
         );
 
         $elasticResponse = $elasticSearch->matched();
         $status = $elasticSearch->requestStatus();
-        $this->comparison = json_decode($elasticResponse, true);
+        $this->similarity = $elasticResponse;
 
+    }
+
+    public function similarity(): array
+    {
+        return $this->similarity;
     }
 }
