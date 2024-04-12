@@ -2,6 +2,8 @@
 
 namespace App\Modules\Blacklist;
 
+use App\Modules\ElasticSearch\ElasticSearch;
+
 class BlacklistEntity
 {
     public function __construct(private string $searchKey)

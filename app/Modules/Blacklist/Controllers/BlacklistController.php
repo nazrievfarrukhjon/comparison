@@ -3,8 +3,10 @@
 namespace App\Modules\Blacklist\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Modules\Blacklist\BlacklistEntity;
+use App\Modules\Blacklist\BlacklistESConfigs;
 use App\Modules\Blacklist\Requests\CompareToBlacklistRequest;
+use App\Modules\ElasticSearch\ElasticSearch;
+use GuzzleHttp\Exception\GuzzleException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -64,14 +66,17 @@ class BlacklistController extends Controller
      *     ),
      * )
      * =========================================*
+     * @throws GuzzleException
      */
     public function find(CompareToBlacklistRequest $request): JsonResponse
     {
-        $blacklistEntity = new BlacklistEntity($request->search_key);
-        $blacklistEntity->find();
-        $similarity = $blacklistEntity->similarity();
+        $elasticSearch = new ElasticSearch(
+            $request->search_key,
+           new BlacklistESConfigs(),
+        );
 
-        return response()->json(['similarity' => $similarity], 200);
+        $elasticSearch->fuzzySearch();
+        return $elasticSearch->jsonResponse();
     }
 
     public function index(Request $request)

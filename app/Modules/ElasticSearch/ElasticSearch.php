@@ -2,9 +2,11 @@
 
 namespace App\Modules\ElasticSearch;
 
+use App\Modules\Blacklist\BlacklistESConfigs;
 use App\Modules\Telegram\Telegram;
 use GuzzleHttp\Client as Guzzle;
 use GuzzleHttp\Exception\GuzzleException;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
 
 class ElasticSearch
@@ -20,11 +22,8 @@ class ElasticSearch
     private int $requestStatus;
 
     public function __construct(
-        private readonly string $searchField,
-        private readonly string $indexName,
-        private readonly string $documentName,
-        private readonly array  $indexSettings,
-        private readonly string $initials,
+        private readonly string $searchKey,
+        private readonly BlacklistESConfigs  $blacklistESConfigs,
     ) {
         $host = config('database.connections.elasticsearch.hosts');
         $this->hostPort = $host['scheme'] .
@@ -81,10 +80,10 @@ class ElasticSearch
     public function createIndex(): void
     {
         $this->guzzle->put(
-            "{$this->hostPort}/{$this->indexName}",
+            "{$this->hostPort}/{$this->blacklistESConfigs->indexName()}",
             [
                 'headers' => $this->headers,
-                'json' => $this->indexSettings
+                'json' => $this->blacklistESConfigs->indexSettings()
             ]
         );
     }
@@ -147,14 +146,14 @@ class ElasticSearch
     public function fuzzySearch(): void
     {
         $response = $this->guzzle->post(
-            "{$this->hostPort}/{$this->indexName}/_search",
+            "{$this->hostPort}/{$this->blacklistESConfigs->indexName()}/_search",
             [
                 'headers' => $this->headers,
                 'json' => [
                     "query" => [
                         "match" => [
-                            "$this->documentName" => [
-                                "query" => $this->initials,
+                            "{$this->blacklistESConfigs->documentName()}" => [
+                                "query" => $this->searchKey,
                                 "fuzziness" => "AUTO:4,6",
                             ]
                         ]
@@ -173,14 +172,14 @@ class ElasticSearch
     public function search(): void
     {
         $response = $this->guzzle->post(
-            "{$this->hostPort}/{$this->indexName}/_search",
+            "{$this->hostPort}/{$this->blacklistESConfigs->indexName()}/_search",
             [
                 'headers' => $this->headers,
                 'json' => [
                     "query" => [
                         "match" => [
-                            "$this->documentName" => $this->constructSearchKey(
-                                $this->initials
+                            "{$this->blacklistESConfigs->documentName()}" => $this->constructSearchKey(
+                                $this->searchKey
                             )
                         ]
                     ]
@@ -197,15 +196,15 @@ class ElasticSearch
     public function wildCardSearch(): void
     {
         $response = $this->guzzle->post(
-            "{$this->hostPort}/{$this->indexName}/_search",
+            "{$this->hostPort}/{$this->blacklistESConfigs->indexName()}/_search",
             [
                 'headers' => $this->headers,
                 'json' => [
                     "query" => [
                         "wildcard" => [
-                            "$this->documentName" => [
+                            "{$this->blacklistESConfigs->documentName()}" => [
                                 "value" => '*' . $this->constructSearchKey(
-                                        $this->initials
+                                        $this->searchKey
                                     ) . '*'
                             ]
                         ]
@@ -223,7 +222,7 @@ class ElasticSearch
     public function add(array $document): void
     {
         $response = $this->guzzle->post(
-            "{$this->hostPort}/{$this->indexName}/_doc",
+            "{$this->hostPort}/{$this->blacklistESConfigs->indexName()}/_doc",
             [
                 'headers' => $this->headers,
                 'json' => $document
@@ -239,7 +238,7 @@ class ElasticSearch
     public function deleteDocument(string $documentId): void
     {
         $response = $this->guzzle->delete(
-            "{$this->hostPort}/{$this->indexName}/_doc/{$documentId}"
+            "{$this->hostPort}/{$this->blacklistESConfigs->indexName()}/_doc/{$documentId}"
         );
 
         $this->result = [$response->getBody()->getContents(), 200];
@@ -251,7 +250,7 @@ class ElasticSearch
     public function getAll(): void
     {
         $response = $this->guzzle->get(
-            "{$this->hostPort}/{$this->indexName}/_search",
+            "{$this->hostPort}/{$this->blacklistESConfigs->indexName()}/_search",
             ['headers' => $this->headers]
         );
 
@@ -266,7 +265,7 @@ class ElasticSearch
     {
 
         $response = $this->guzzle->delete(
-            "{$this->hostPort}/{$this->indexName}"
+            "{$this->hostPort}/{$this->blacklistESConfigs->indexName()}"
         );
 
         $this->result = [$response->getBody()->getContents(), 200];
@@ -291,7 +290,7 @@ class ElasticSearch
     public function countIndexDocuments(): void
     {
         $response = $this->guzzle->get(
-            "{$this->hostPort}/{$this->indexName}/_count"
+            "{$this->hostPort}/{$this->blacklistESConfigs->indexName()}/_count"
         );
 
         $this->result = [$response->getBody()->getContents(), 200];
@@ -303,7 +302,7 @@ class ElasticSearch
     public function findAndDeleteByDocId(array $item): void
     {
         $response = $this->guzzle->get(
-            "{$this->hostPort}/{$this->indexName}/_search",
+            "{$this->hostPort}/{$this->blacklistESConfigs->indexName()}/_search",
             [
                 'json' => [
                     'query' => [
@@ -321,7 +320,7 @@ class ElasticSearch
             foreach ($blacklist['hits']['hits'] as $hit) {
                 $documentId = $hit['_id'];
                 $this->guzzle->delete(
-                    "{$this->hostPort}/{$this->indexName}/_doc/{$documentId}"
+                    "{$this->hostPort}/{$this->blacklistESConfigs->indexName()}/_doc/{$documentId}"
                 );
             }
         }
@@ -333,7 +332,7 @@ class ElasticSearch
     public function deleteDocByTerrId(string $terrId): void
     {
         $response = $this->guzzle->get(
-            "{$this->hostPort}/{$this->indexName}/_search",
+            "{$this->hostPort}/{$this->blacklistESConfigs->indexName()}/_search",
             [
                 'json' => [
                     'query' => [
@@ -355,7 +354,7 @@ class ElasticSearch
             foreach ($blacklist['hits']['hits'] as $hit) {
                 $documentId = $hit['_id'];
                 $this->guzzle->delete(
-                    "{$this->hostPort}/{$this->indexName}/_doc/{$documentId}"
+                    "{$this->hostPort}/{$this->blacklistESConfigs->indexName()}/_doc/{$documentId}"
                 );
             }
         }
@@ -363,14 +362,14 @@ class ElasticSearch
 
     /**
      * it extracts the array of results
-     * exactSearchResults[0][_source']['initials']
+     * exactSearchResults[0][_source']['searchKey']
      *
      * @throws GuzzleException
      */
     public function exactSearchAndSetResult(string $searchKey): void
     {
         $response = $this->guzzle->get(
-            "{$this->hostPort}/{$this->indexName}/_search",
+            "{$this->hostPort}/{$this->blacklistESConfigs->indexName()}/_search",
             [
                 'json' => [
                     'query' => [
@@ -392,17 +391,17 @@ class ElasticSearch
     /**
      * @throws GuzzleException
      */
-    public function updateClientInitialsByDocId(string $esDocId, string $newInitials): void
+    public function updateClientSearchKeyByDocId(string $esDocId, string $newsearchKey): void
     {
         $this->guzzle->post(
-            "{$this->hostPort}/{$this->indexName}/_update/{$esDocId}",
+            "{$this->hostPort}/{$this->blacklistESConfigs->indexName()}/_update/{$esDocId}",
             [
                 'json' => [
                     'script' => [
-                        'source' => 'ctx._source.initials = params.newInitials;',
+                        'source' => 'ctx._source.searchKey = params.newsearchKey;',
                         'lang' => 'painless',
                         'params' => [
-                            'newInitials' => $newInitials,
+                            'newsearchKey' => $newsearchKey,
                         ],
                     ],
                 ],
@@ -418,7 +417,7 @@ class ElasticSearch
     public function updateWithId(array $document, int $id): void
     {
         $response = $this->guzzle->post(
-            "{$this->hostPort}/{$this->indexName}/_doc/{$id}",
+            "{$this->hostPort}/{$this->blacklistESConfigs->indexName()}/_doc/{$id}",
             [
                 'headers' => $this->headers,
                 'json' => $document
@@ -428,8 +427,13 @@ class ElasticSearch
         $this->result = [$response->getBody()->getContents(), 200];
     }
 
-    private function constructSearchKey(string $initials)
+    private function constructSearchKey(string $searchKey)
     {
+    }
+
+    public function jsonResponse(): JsonResponse
+    {
+        return response()->json(['result' => $this->result], 200);
     }
 
 }
