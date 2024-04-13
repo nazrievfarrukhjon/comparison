@@ -3,87 +3,109 @@
 namespace App\Modules\Admin\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Modules\Admin\PrivilegeService;
+use App\Models\User;
+use App\Modules\Admin\Privilege;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
 class PrivilegeController extends Controller
 {
 
-    public function __construct(private readonly PrivilegeService $privilegeService)
-    {
-    }
-
     // privileges
     public function assignRoleToUser(int $roleId, int $userId): JsonResponse
     {
-        return $this->privilegeService->assignRoleToUser($roleId, $userId);
+        $privilege = Privilege::newRoleUserConstructor($roleId, $userId);
+        $privilege->assignRoleToUser();
+
+        return response()->json([
+            'message' => 'Role assigned to user successfully',
+            'user' => User::query()->find($userId)
+        ]);
     }
 
     public function assignPermissionToUser(int $permissionId, int $userId): JsonResponse
     {
-        return $this->privilegeService->assignPermissionToUser($permissionId, $userId);
+        $privilege = Privilege::newPermissionUserConstructor($permissionId, $userId);
+        $privilege->assignPermissionToUser();
+
+        return response()->json([
+            'message' => 'Permission assigned to user successfully',
+            'user' => User::query()->find($userId)
+        ]);
     }
 
     public function assignPermissionToRole(int $permissionId, int $roleId): JsonResponse
     {
-        return $this->privilegeService->assignPermissionToRole($permissionId, $roleId);
+        $privilege = Privilege::newPermissionRoleConstructor($permissionId, $roleId);
+        $privilege->assignPermissionToRole();
+
+        return response()->json([
+            'message' => 'Permission assigned to role successfully',
+            'role' => Role::query()->find($roleId)
+        ]);
     }
 
     //roles
     public function getRoles(): LengthAwarePaginator
     {
-        return Role::query()
-            ->with('permissions')
-            ->paginate();
+        $privilege = Privilege::newDefaultConstructor();
 
+        return $privilege->rolesWithPermissionsPagination();
     }
 
     public function storeRole(Request $request): JsonResponse
     {
-        return $this->privilegeService->storeRole($request->all());
+        $privilege = Privilege::newAttributesConstructor($request->all());
+        $privilege->storeRole();
+
+        return response()->json(['role' => $privilege->role()]);
     }
 
-    public function updateRole(Request $request, int $id): JsonResponse
+    public function updateRole(Request $request, int $roleId): JsonResponse
     {
-        return $this->privilegeService->updateRole($request->all(), $id);
+        $privilege = Privilege::newAttributesAndRoleIdConstructor($request->all(), $roleId);
+        $privilege->updateRole();
+
+        return response()->json(['role' => $privilege->role()]);
     }
 
-    public function destroyRole(int $id): JsonResponse
+    public function destroyRole(int $roleId): JsonResponse
     {
-        Role::query()
-            ->findOrFail($id)
-            ->delete();
+        $privilege = Privilege::newRoleIdConstructor($roleId);
+        $privilege->deleteRole();
 
         return response()->json(null, 204);
     }
 
     public function getPermission(): LengthAwarePaginator
     {
-        return Permission::query()->paginate();
+        $privilege = Privilege::newDefaultConstructor();
+
+        return $privilege->permissionsPagination();
     }
 
     public function storePermission(Request $request): JsonResponse
     {
-        return $this->privilegeService->storePermission($request->all());
+        $privilege = Privilege::newAttributesConstructor($request->all());
+        $privilege->storePermission();
+
+        return response()->json(['permission' => $privilege->permission()], 201);
     }
 
-    public function updatePermission(Request $request, int $id): bool|int
+    public function updatePermission(Request $request, int $permissionId): JsonResponse
     {
-        $permission = Permission::query()
-            ->findOrFail($id);
+        $privilege = Privilege::newAttributesAndPermissionIdConstructor($request->all(), $permissionId);
+        $privilege->updatePermission();
 
-        return $permission->update($request->all());
+        return response()->json(['permission' => $privilege->permission()], 201);
     }
 
-    public function destroyPermission(int $id): JsonResponse
+    public function destroyPermission(int $permissionId): JsonResponse
     {
-        Permission::query()
-            ->findOrFail($id)
-            ->delete();
+        $privilege = Privilege::newPermissionIdConstructor($permissionId);
+        $privilege->deletePermission();
 
         return response()->json(null, 204);
     }
