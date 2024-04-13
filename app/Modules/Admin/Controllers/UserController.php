@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Modules\User\Controllers;
+namespace App\Modules\Admin\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use App\Modules\User\Requests\UserStoreRequest;
-use App\Modules\User\Requests\UserUpdateRequest;
-use App\Modules\User\UserService;
+use App\Modules\Admin\Requests\UserStoreRequest;
+use App\Modules\Admin\Requests\UserUpdateRequest;
+use App\Modules\Admin\UserService;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;

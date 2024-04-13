@@ -8,7 +8,9 @@ use Illuminate\Support\Facades\Log;
 
 class Permutation
 {
-    public function __construct(private readonly blacklistParserService $parserService) {}
+    public function __construct(private readonly blacklistParserService $parserService)
+    {
+    }
 
     public static function perform(array $initials): array
     {
@@ -156,7 +158,7 @@ class Permutation
     private function smsAndLog(array $initialsList): void
     {
         $msg = 'more than 15 initials is crucial for ES performance '
-            .json_encode($initialsList);
+            . json_encode($initialsList);
 
         Log::info($msg);
 

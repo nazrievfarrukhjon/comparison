@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Modules\Blacklist\Controllers;
+namespace App\Modules\Whitelist\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Modules\Blacklist\BlacklistEntity;

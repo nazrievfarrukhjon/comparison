@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Modules\User\Controllers;
+namespace App\Modules\Admin\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Modules\User\Requests\AuthLoginRequest;
-use App\Modules\User\Requests\AuthRegisterRequest;
+use App\Modules\Admin\Requests\AuthLoginRequest;
+use App\Modules\Admin\Requests\AuthRegisterRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
