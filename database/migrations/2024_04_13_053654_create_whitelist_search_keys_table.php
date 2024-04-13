@@ -13,18 +13,13 @@ return new class extends Migration
     {
         Schema::create('whitelist_search_keys', function (Blueprint $table) {
             $table->id();
-
-            $table->id();
             $table->string('names_combo');
             $table->unsignedBigInteger('whitelist_id');
-            $table->timestamps();
 
             $table->foreign('whitelist_id')
                 ->references('id')
                 ->on('whitelists')
                 ->onDelete('cascade');
-
-            $table->timestamps();
 
             $table->timestamps();
         });

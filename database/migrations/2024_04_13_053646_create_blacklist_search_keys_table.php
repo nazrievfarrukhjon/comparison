@@ -15,7 +15,6 @@ return new class extends Migration
             $table->id();
             $table->string('names_combo');
             $table->unsignedBigInteger('blacklist_id');
-            $table->timestamps();
 
             $table->foreign('blacklist_id')
                 ->references('id')
