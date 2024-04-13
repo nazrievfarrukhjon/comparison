@@ -20,8 +20,8 @@ class ElasticsearchWithGuzzle
 
     private int $requestStatus;
 
-    public function __construct(
-    ) {
+    public function __construct()
+    {
         $host = config('database.connections.elasticsearch.hosts');
         $this->hostPort = $host['scheme'] .
             '://' .
@@ -216,10 +216,10 @@ class ElasticsearchWithGuzzle
     /**
      * @throws GuzzleException
      */
-    public function add(array $document): void
+    public function add(string $indexName, array $document): void
     {
         $response = $this->guzzle->post(
-            "{$this->hostPort}/{$this->blacklistESConfigs->indexName()}/_doc",
+            "{$this->hostPort}/{$indexName}/_doc",
             [
                 'headers' => $this->headers,
                 'json' => $document
@@ -244,15 +244,14 @@ class ElasticsearchWithGuzzle
     /**
      * @throws GuzzleException
      */
-    public function getAll(): void
+    public function indexContent(string $indexName): array
     {
         $response = $this->guzzle->get(
-            "{$this->hostPort}/{$this->blacklistESConfigs->indexName()}/_search",
+            "{$this->hostPort}/{$indexName}/_search",
             ['headers' => $this->headers]
         );
 
-        $this->result = [$response->getBody()->getContents(), 200];
-
+         return [$response->getBody()->getContents(), 200];
     }
 
     /**
@@ -431,6 +430,10 @@ class ElasticsearchWithGuzzle
     public function jsonResponse(): JsonResponse
     {
         return response()->json(['result' => $this->result], 200);
+    }
+
+    public function addDocument(string $indexName, array $indexSettings)
+    {
     }
 
 }

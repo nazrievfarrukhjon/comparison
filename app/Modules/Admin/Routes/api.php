@@ -25,7 +25,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
                     Route::get('', [UserController::class, 'index']);
                     Route::post('', [UserController::class, 'store']);
                     Route::patch('/{id}', [UserController::class, 'update']);
-                    Route::delete('/{id}', [UserController::class, 'destroy']);
+                    Route::delete('/{id}', [UserController::class, 'delete']);
                 });
 
             Route::prefix('privileges')

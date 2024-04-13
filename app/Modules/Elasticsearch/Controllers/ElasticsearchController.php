@@ -2,8 +2,10 @@
 
 namespace App\Modules\Elasticsearch\Controllers;
 
+use App\Modules\Elasticsearch\ElasticsearchDocument;
 use App\Modules\Elasticsearch\ElasticsearchWithGuzzle;
 use App\Modules\Elasticsearch\IndicesOfElasticsearch;
+use App\Modules\Elasticsearch\Requests\AddDocumentRequest;
 use App\Modules\Elasticsearch\Requests\CreateIndexRequest;
 use GuzzleHttp\Exception\GuzzleException;
 use Illuminate\Http\JsonResponse;
@@ -62,15 +64,14 @@ class ElasticsearchController
     public function addDocument(AddDocumentRequest $request): JsonResponse
     {
         $document = [
-            'uid' => $request->uid ?? rand(),
-            "initials" => $request->input('initials'),
+            'id' => $request->id,
+            "name_combo" => $request->input('name_combo'),
         ];
 
-        list($response, $status) = ElasticBuilder::init()
-            ->setIndexName($request->input('index_name'))
-            ->add($document);
+        $elasticsearchDocument = ElasticsearchDocument::newIndexAndDocumentConstructor($request->input('index_name'), $document);
+        $elasticsearchDocument->add();
 
-        return response()->json($response, $status);
+        return response()->json(['document stored!']);
     }
 
     /**
@@ -169,13 +170,15 @@ class ElasticsearchController
             ->createIndex($indexName, $settings);
     }
 
-    public function getAllFromIndex(Request $request)//: JsonResponse
+    /**
+     * @throws GuzzleException
+     */
+    public function indexContent(Request $request): JsonResponse
     {
-        list($response, $status) = ElasticBuilder::init()
-            ->setIndexName($request->input('index_name'))
-            ->getAll();
+        $elasticsearchDocument = ElasticsearchDocument::newIndexConstructor($request->input('index_name'));
+        $response = $elasticsearchDocument->indexContent();
 
-        return response()->json($response, $status);
+        return response()->json(['response' => $response]);
     }
 
     public function deleteIndexTotally(DeleteIndexRequest $request): JsonResponse

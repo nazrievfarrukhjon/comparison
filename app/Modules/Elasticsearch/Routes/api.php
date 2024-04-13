@@ -7,7 +7,7 @@ Route::namespace('ElasticSearch\Controllers')
     ->prefix('elasticsearch')
     ->group(function () {
         Route::prefix('index')->group(function () {
-            Route::get('/', [ElasticsearchController::class, 'index']);
+            Route::get('/', [ElasticsearchController::class, 'indexContent']);
             Route::get('/indices', [ElasticsearchController::class, 'indices']);
 
             Route::post('/', [ElasticsearchController::class, 'createIndex']);
@@ -15,5 +15,12 @@ Route::namespace('ElasticSearch\Controllers')
             Route::put('/{id}', [ElasticsearchController::class, 'update']);
 
             Route::post('/find', [ElasticsearchController::class, 'find']);
+        });
+
+        Route::prefix('document')->group(function () {
+            Route::get('/', [ElasticsearchController::class, 'documents']);
+            Route::post('/', [ElasticsearchController::class, 'addDocument']);
+            Route::delete('/{id}', [ElasticsearchController::class, 'deleteDoc']);
+            Route::put('/{id}', [ElasticsearchController::class, 'updateDoc']);
         });
     });
