@@ -1,15 +1,10 @@
 <?php
 
-namespace App\Modules\blacklistorists\UseCases\Uploader\UploaderParsers;
+namespace App\Modules;
 
-use App\Modules\Parsers\StrCleaner;
-use App\Modules\Parsers\StrParser;
 use App\Modules\Telegram\Telegram;
-use App\Modules\blacklistorists\Models\blacklistorist;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
-use Maatwebsite\Excel\Concerns\ToArray;
-use Maatwebsite\Excel\Concerns\WithStartRow;
 
 class UploadFileParse implements ToArray, WithStartRow
 {
@@ -58,7 +53,7 @@ class UploadFileParse implements ToArray, WithStartRow
             );
 
             $blacklistorist = new blacklistorist([
-                'concatenated_names' => $concatenatedNames,
+                'concat_names' => $concatenatedNames,
                 'second_name' => $cyrillicInitialsArray[0] ?? null,
                 'first_name' => $cyrillicInitialsArray[1] ?? null,
                 'third_name' => $cyrillicInitialsArray[2] ?? null,
@@ -70,8 +65,8 @@ class UploadFileParse implements ToArray, WithStartRow
                     $cyrillicInitialsArray[7] ?? '',
                     $cyrillicInitialsArray[8] ?? ''),
                 //international police
-                'organization' => 'IP',
-                'birth_date' => Carbon::parse($row[1]),
+                'type' => 'IP',
+                'date_of_birth' => Carbon::parse($row[1]),
                 //comment it
                 //'others'  => 'srochnooo! nbt',
             ]);

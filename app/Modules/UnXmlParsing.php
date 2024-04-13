@@ -1,24 +1,21 @@
 <?php
 
-namespace App\Modules\blacklistorists\UseCases\Uploader\UploaderParsers;
+namespace App\Modules;
 
-use App\Modules\Parsers\StrParser;
-use App\Modules\blacklistorists\Jobs\CreateUNblacklistorInitsAndCheckInClientsCatalog;
-use App\Modules\blacklistorists\Models\blacklistorist;
+use App\Modules\Blacklist\Models\Blacklist;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
-class UNblacklistoristXmlListParing
+class UNBlacklistXmlListParing
 {
-    public function perform(Request $request)
+    public function perform(Request $request): void
     {
         $string = file_get_contents($request->file('file')->getPathname());
         $xml = new \SimpleXMLElement($string);
 
         try {
             foreach ($xml->xpath('//INDIVIDUALS/INDIVIDUAL') as $t) {
-                //depending on birth date we create blacklistorist copy
                 if (isset($t->children()->INDIVIDUAL_DATE_OF_BIRTH)) {
                     $this->iterateData($t);
                 } else {
@@ -26,7 +23,7 @@ class UNblacklistoristXmlListParing
                 }
             }
         } catch (\Exception $e) {
-            Log::info(['class UNblacklistoristXmlListParser' => $e]);
+            Log::info('qwe', ['class UNBlacklistXmlListParser' => $e]);
         }
 
     }
@@ -50,14 +47,14 @@ class UNblacklistoristXmlListParing
             trim($t->children()->FOURTH_NAME)
         );
 
-        $blacklistorist = new blacklistorist([
-            'concatenated_names' => $concatenatedNames,
+        $blacklistorist = new Blacklist([
+            'concat_names' => $concatenatedNames,
             'first_name' => $t->children()->FIRST_NAME,
             'second_name' => $t->children()->SECOND_NAME,
             'third_name' => isDataValid($t->children()->THIRD_NAME) ? $t->children()->THIRD_NAME : null,
             'fourth_name' => isDataValid($t->children()->FOURTH_NAME) ? $t->children()->FOURTH_NAME : null,
-            'organization' => 'UN',
-            'birth_date' => $b,
+            'type' => 'UN',
+            'date_of_birth' => $b,
             'others' => 'un_unhandled',
         ]);
 
