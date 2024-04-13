@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Modules\ElasticSearch;
+namespace App\Modules\Elasticsearch;
 
 use App\Modules\Blacklist\BlacklistESConfigs;
 use App\Modules\Telegram\TelegramMessage;
@@ -9,7 +9,7 @@ use GuzzleHttp\Exception\GuzzleException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
 
-class ElasticSearch
+class ElasticsearchWithGuzzle
 {
     private string $hostPort;
 
@@ -22,8 +22,6 @@ class ElasticSearch
     private int $requestStatus;
 
     public function __construct(
-        private readonly string $searchKey,
-        private readonly BlacklistESConfigs  $blacklistESConfigs,
     ) {
         $host = config('database.connections.elasticsearch.hosts');
         $this->hostPort = $host['scheme'] .
@@ -77,13 +75,13 @@ class ElasticSearch
      *
      * @throws GuzzleException
      */
-    public function createIndex(): void
+    public function createIndex(string $indexName, array $indexSettings): void
     {
         $this->guzzle->put(
-            "{$this->hostPort}/{$this->blacklistESConfigs->indexName()}",
+            "{$this->hostPort}/{$indexName}",
             [
                 'headers' => $this->headers,
-                'json' => $this->blacklistESConfigs->indexSettings()
+                'json' => $indexSettings
             ]
         );
     }
@@ -275,13 +273,13 @@ class ElasticSearch
     /**
      * @throws GuzzleException
      */
-    public function getAllIndices(): void
+    public function indices(): array
     {
         $response = $this->guzzle->get(
             "{$this->hostPort}/_cat/indices"
         );
 
-        $this->result = [$response->getBody()->getContents(), 200];
+        return [$response->getBody()->getContents(), 200];
     }
 
     /**

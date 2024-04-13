@@ -2,7 +2,7 @@
 
 namespace App\Modules\Blacklist;
 
-use App\Modules\ElasticSearch\ElasticSearch;
+use App\Modules\Elasticsearch\ElasticsearchWithGuzzle;
 
 class BlacklistEntity
 {
@@ -16,14 +16,7 @@ class BlacklistEntity
     public function find(): void
     {
 
-        $elasticSearch = new ElasticSearch(
-            new ESRequest(
-                new BlacklistES(
-                    new SearchKeyword($this->searchKey)
-                )
-            )
-        );
-
+        $elasticSearch = new ElasticsearchWithGuzzle();
         $elasticResponse = $elasticSearch->matched();
         $status = $elasticSearch->requestStatus();
         $this->similarity = $elasticResponse;

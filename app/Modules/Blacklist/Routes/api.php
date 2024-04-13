@@ -1,16 +1,16 @@
 <?php
 
-use App\Modules\Blacklist\Controllers\WhitelistController;
+use App\Modules\Blacklist\Controllers\BlacklistController;
 use Illuminate\Support\Facades\Route;
 
 // frauds
 Route::namespace('Blacklist\Controllers')
-    ->prefix('blacklists')
+    ->prefix('blacklist')
     ->group(function () {
-        Route::get('/', [WhitelistController::class, 'index']);
-        Route::post('/', [WhitelistController::class, 'store']);
-        Route::delete('/{id}', [WhitelistController::class, 'delete']);
-        Route::put('/{id}', [WhitelistController::class, 'update']);
+        Route::get('/', [BlacklistController::class, 'index']);
+        Route::post('/', [BlacklistController::class, 'store']);
+        Route::delete('/{id}', [BlacklistController::class, 'delete']);
+        Route::put('/{id}', [BlacklistController::class, 'update']);
 
-        Route::put('/find', [WhitelistController::class, 'find']);
+        Route::post('/find', [BlacklistController::class, 'find']);
     });

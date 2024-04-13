@@ -1,22 +1,16 @@
 <?php
 
-namespace App\Modules\ElasticSearch\Controllers;
+namespace App\Modules\Elasticsearch\Controllers;
 
-use App\Modules\Elastic\ElasticBuilder;
-use App\Modules\Elastic\ElasticService;
-use App\Modules\Elastic\Requests\AddDocumentRequest;
-use App\Modules\Elastic\Requests\CreateIndexRequest;
-use App\Modules\Elastic\Requests\DeleteIndexRequest;
-use App\Modules\Elastic\Requests\DocumentRequest;
-use App\Modules\Elastic\Requests\ElasticSearchRequest;
-use App\Modules\Elastic\Requests\ExactSearchRequest;
-use App\Modules\Parsers\StrConverter;
+use App\Modules\Elasticsearch\ElasticsearchWithGuzzle;
+use App\Modules\Elasticsearch\IndicesOfElasticsearch;
+use App\Modules\Elasticsearch\Requests\CreateIndexRequest;
 use GuzzleHttp\Exception\GuzzleException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
-class ElasticController
+class ElasticsearchController
 {
     /**
      */
@@ -108,7 +102,7 @@ class ElasticController
      */
     public function updateDocument(Request $request): void
     {
-        ElasticBuilder::init()
+        ElasticsearchWithGuzzle::init()
             ->setIndexName($request->input('index_name'))
             ->setSearchField($request->input('document_name'))
             ->updateClientInitialsByDocId($request->document_id, $request->new_initials);
@@ -147,12 +141,10 @@ class ElasticController
     public function createIndex(CreateIndexRequest $request): JsonResponse
     {
         $indexName = $request->input('index_name');
-        $settings = ElasticService::constructTrigramIndexSetting();
+        $indicesOfElasticsearch = new IndicesOfElasticsearch($indexName);
+        $indicesOfElasticsearch->store();
 
-        list($response, $status) = ElasticBuilder::init()
-            ->createIndex($indexName, $settings);
-
-        return response()->json($response, $status);
+        return response()->json(['index created']);
     }
 
     public function deleteIndex(Request $request): JsonResponse
@@ -195,12 +187,15 @@ class ElasticController
         return response()->json($response, $status);
     }
 
-    public function getAllIndex(): JsonResponse
+    /**
+     * @throws GuzzleException
+     */
+    public function indices(): JsonResponse
     {
-        list($response, $status) = ElasticBuilder::init()
-            ->getAllIndices();
+        $indicesOfElasticsearch = IndicesOfElasticsearch::newWithNoArg();
+        $indices = $indicesOfElasticsearch->indices();
 
-        return response()->json($response, $status);
+        return response()->json(['indices' => $indices]);
     }
 
     public function countIndexDocuments(Request $request): JsonResponse
