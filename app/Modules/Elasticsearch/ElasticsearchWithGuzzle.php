@@ -2,7 +2,6 @@
 
 namespace App\Modules\Elasticsearch;
 
-use App\Modules\Blacklist\BlacklistESConfigs;
 use App\Modules\Telegram\TelegramMessage;
 use GuzzleHttp\Client as Guzzle;
 use GuzzleHttp\Exception\GuzzleException;
