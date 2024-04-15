@@ -3,6 +3,7 @@
 namespace App\Modules\Elasticsearch;
 
 use App\Modules\Blacklist\BlacklistESConfigs;
+use App\Modules\InputAttributes;
 use GuzzleHttp\Exception\GuzzleException;
 
 /**
@@ -27,6 +28,7 @@ class ElasticsearchDocument
     private ElasticsearchIndex $elasticsearchIndex;
     private array $attributes;
     private string $esDocId;
+    private InputAttributes $inputAttributes;
 
     public static function newIndexConstructor(string $indexName): ElasticsearchDocument
     {
@@ -107,11 +109,14 @@ class ElasticsearchDocument
         return $obj;
     }
 
-    public static function newEsGuzzleAndAttributesConstructor(ElasticsearchGuzzle $elasticsearchGuzzle, array $attributes): ElasticsearchDocument
+    public static function newEsGuzzleAndAttributesConstructor(
+        ElasticsearchGuzzle $elasticsearchGuzzle,
+        InputAttributes $inputAttributes
+    ): ElasticsearchDocument
     {
         $obj = new self();
         $obj->elasticsearchGuzzle = $elasticsearchGuzzle;
-        $obj->attributes = $attributes;
+        $obj->inputAttributes = $inputAttributes;
         return $obj;
     }
 
@@ -190,6 +195,20 @@ class ElasticsearchDocument
             $this->attributes['document_field'],
             $this->attributes['search_key']
         );
+    }
+
+    /**
+     * @throws GuzzleException
+     */
+    public function fuzzyMatch(): array
+    {
+        $searchKey = $this->inputAttributes->searchkey();
+        $indexName = $this->inputAttributes->indexName();
+        $documentField = $this->inputAttributes->documentField();
+
+        $this->elasticsearchGuzzle->findFuzziness($indexName, $documentField, $searchKey);
+
+        return $this->elasticsearchGuzzle->decodedFuzzyMatchGuzzleResponseContent();
     }
 
 }

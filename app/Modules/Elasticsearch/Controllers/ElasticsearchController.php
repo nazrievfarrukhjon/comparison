@@ -8,57 +8,30 @@ use App\Modules\Elasticsearch\ElasticsearchIndex;
 use App\Modules\Elasticsearch\Requests\AddDocumentRequest;
 use App\Modules\Elasticsearch\Requests\CreateIndexRequest;
 use App\Modules\Elasticsearch\Requests\DocumentRequest;
+use App\Modules\Elasticsearch\Requests\ElasticSearchRequest;
 use App\Modules\Elasticsearch\Requests\ExactSearchRequest;
 use App\Modules\Elasticsearch\Requests\UpdateDocumentRequest;
+use App\Modules\InputAttributes;
 use GuzzleHttp\Exception\GuzzleException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 
 class ElasticsearchController
 {
-    /**
-     */
-    public function search(ElasticSearchRequest $request): JsonResponse
-    {
-        list($response, $status) = ElasticBuilder::init()
-            ->setIndexName($request->input('index_name'))
-            ->search(
-                $request->input('document_name'),
-                $request->input('search_key'),
-            );
-
-        return response()->json($response, $status);
-    }
-
-    public function wildCardSearch(ElasticSearchRequest $request): JsonResponse
-    {
-        list($response, $status) = ElasticBuilder::init()
-            ->setIndexName($request->input('index_name'))
-            ->wildCardSearch(
-                $request->input('document_name'),
-                $request->input('search_key'),
-            );
-
-        return response()->json($response, $status);
-    }
 
     /**
      * @throws GuzzleException
      */
-    public function fuzzySearch(ElasticSearchRequest $request): JsonResponse
+    public function fuzzyMatch(ElasticSearchRequest $request): JsonResponse
     {
-        $latinInits = StrConverter::convertCyrillicToLatin($request->input('search_key'));
-        $latinInits = Str::lower(preg_replace('/[^a-zA-Z]/', '', $latinInits));
+        $elasticsearchDocument = ElasticsearchDocument::newEsGuzzleAndAttributesConstructor(
+            new ElasticsearchGuzzle(),
+            InputAttributes::newArrayConstructor($request->all())
+        );
 
-        list($response, $status) = ElasticBuilder::init()
-            ->setIndexName($request->input('index_name'))
-            ->fuzzySearch(
-                $request->input('document_name'),
-                $latinInits,
-            );
+        $fuzzyMatch = $elasticsearchDocument->fuzzyMatch();
 
-        return response()->json($response, $status);
+        return response()->json($fuzzyMatch);
     }
 
     /**
@@ -68,22 +41,11 @@ class ElasticsearchController
     {
         $elasticsearchDocument = ElasticsearchDocument::newEsGuzzleAndAttributesConstructor(
             new ElasticsearchGuzzle(),
-            $request->all()
+            InputAttributes::newArrayConstructor($request->all())
         );
         $elasticsearchDocument->add();
 
         return response()->json(['document stored!']);
-    }
-
-    /**
-     */
-    public function addDocumentWithId(AddDocumentRequest $request, int $id): JsonResponse
-    {
-        list($response, $status) = ElasticBuilder::init()
-            ->setIndexName($request->input('index_name'))
-            ->updateWithId(["initials" => $request->input('initials')], $id);
-
-        return response()->json($response, $status);
     }
 
 
@@ -104,7 +66,7 @@ class ElasticsearchController
     {
         $elasticsearchDocument = ElasticsearchDocument::newEsGuzzleAndAttributesConstructor(
             new ElasticsearchGuzzle(),
-            $request->all()
+            InputAttributes::newArrayConstructor($request->all())
         );
 
         $elasticsearchDocument->deleteByEsId();
@@ -119,7 +81,7 @@ class ElasticsearchController
     {
         $elasticsearchDocument = ElasticsearchDocument::newEsGuzzleAndAttributesConstructor(
             new ElasticsearchGuzzle(),
-            $request->all()
+            InputAttributes::newArrayConstructor($request->all())
         );
 
         $elasticsearchDocument->updateByEsId();
@@ -159,33 +121,10 @@ class ElasticsearchController
      */
     public function createIndex(CreateIndexRequest $request): JsonResponse
     {
-        $indexName = $request->input('index_name');
-        $indicesOfElasticsearch = new ElasticsearchIndex($indexName);
+        $indicesOfElasticsearch = ElasticsearchIndex::newIndexNameConstructor($request->input('index_name'));
         $indicesOfElasticsearch->store();
 
         return response()->json(['index created']);
-    }
-
-    public function deleteIndex(Request $request): JsonResponse
-    {
-        $indexName = $request->input('index_name');
-
-        list($response, $status) = ElasticBuilder::init()
-            ->deleteIndex($indexName);
-
-        return response()->json($response, $status);
-    }
-
-    public function updateIndex(Request $request)//: JsonResponse
-    {
-        $indexName = $request->input('index_name');
-        $settings = $request->settings;
-
-        ElasticBuilder::init()
-            ->deleteIndex($indexName);
-
-        ElasticBuilder::init()
-            ->createIndex($indexName, $settings);
     }
 
     /**
@@ -199,15 +138,6 @@ class ElasticsearchController
         return response()->json(['response' => $response]);
     }
 
-    public function deleteIndexTotally(DeleteIndexRequest $request): JsonResponse
-    {
-        list($response, $status) = ElasticBuilder::init()
-            ->setIndexName($request->input('index_name'))
-            ->deleteIndex();
-
-        return response()->json($response, $status);
-    }
-
     /**
      * @throws GuzzleException
      */
@@ -219,13 +149,40 @@ class ElasticsearchController
         return response()->json(['indices' => $indices]);
     }
 
-    public function countIndexDocuments(Request $request): JsonResponse
+    /**
+     * @throws GuzzleException
+     */
+    public function exactMatch(ExactSearchRequest $request): JsonResponse
     {
-        list($response, $status) = ElasticBuilder::init()
-            ->setIndexName($request->input('index_name'))
-            ->countIndexDocuments();
+        $elasticsearchDocument = ElasticsearchDocument::newEsGuzzleAndAttributesConstructor(
+            new ElasticsearchGuzzle(),
+            InputAttributes::newArrayConstructor($request->all())
+        );
 
-        return response()->json($response, $status);
+        $exactMatch = $elasticsearchDocument->exactMatch();
+
+        return response()->json($exactMatch);
+    }
+
+    /**
+     */
+    public function search(ElasticSearchRequest $request): JsonResponse
+    {
+        return response()->json([]);
+    }
+
+
+    /////////////
+    public function wildCardSearch(ElasticSearchRequest $request): JsonResponse
+    {
+        return response()->json([]);
+    }
+
+    /**
+     */
+    public function addDocumentWithId(AddDocumentRequest $request, int $id): JsonResponse
+    {
+        return response()->json([]);
     }
 
     /**
@@ -233,25 +190,26 @@ class ElasticsearchController
      */
     public function qQuery(Request $request): JsonResponse
     {
-        list($response, $status) = ElasticBuilder::init()
-            ->qQuery($request->input('params'));
-
-        return response()->json($response, $status);
+        return response()->json([]);
     }
 
-    /**
-     * @throws GuzzleException
-     */
-    public function exactSearch(ExactSearchRequest $request): JsonResponse
+    public function deleteIndexTotally(DeleteIndexRequest $request): JsonResponse
     {
-        $elasticsearchDocument = ElasticsearchDocument::newEsGuzzleAndAttributesConstructor(
-            new ElasticsearchGuzzle(),
-            $request->all()
-        );
+        return response()->json([]);
+    }
 
-        $exactMatch = $elasticsearchDocument->exactMatch();
+    public function deleteIndex(Request $request): JsonResponse
+    {
+        return response()->json([]);
+    }
 
-        return response()->json($exactMatch);
+    public function updateIndex(Request $request)
+    {
+    }
+
+    public function countIndexDocuments(Request $request): JsonResponse
+    {
+        return response()->json([]);
     }
 
 }

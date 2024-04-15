@@ -22,6 +22,7 @@ class ElasticsearchGuzzle
     private string $documentId;
     private ElasticsearchDocument $elasticsearchDocument;
     private ElasticsearchIndex $elasticsearchIndex;
+    private string $fuzzyMatchGuzzleResponseContent;
 
     public function __construct()
     {
@@ -67,6 +68,12 @@ class ElasticsearchGuzzle
         $obj->indexName = $indexName;
 
         return $obj;
+    }
+
+
+    public function decodedFuzzyMatchGuzzleResponseContent(): array
+    {
+        return json_decode($this->fuzzyMatchGuzzleResponseContent, true);
     }
 
     /**
@@ -175,17 +182,17 @@ class ElasticsearchGuzzle
      *
      * @throws GuzzleException
      */
-    public function fuzzySearch(): void
+    public function findFuzziness(string $indexName, string $documentField, string $searchKey): void
     {
         $response = $this->guzzle->post(
-            "{$this->hostPort}/{$this->blacklistESConfigs->indexName()}/_search",
+            "{$this->hostPort}/{$indexName}/_search",
             [
                 'headers' => $this->headers,
                 'json' => [
                     "query" => [
                         "match" => [
-                            "{$this->blacklistESConfigs->documentName()}" => [
-                                "query" => $this->searchKey,
+                            "{$documentField}" => [
+                                "query" => $searchKey,
                                 "fuzziness" => "AUTO:4,6",
                             ]
                         ]
@@ -194,7 +201,7 @@ class ElasticsearchGuzzle
             ]
         );
 
-        $this->result = [$response->getBody()->getContents(), 200];
+        $this->fuzzyMatchGuzzleResponseContent =  $response->getBody()->getContents();
     }
 
 

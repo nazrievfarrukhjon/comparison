@@ -70,7 +70,7 @@ class BlacklistController extends Controller
     public function find(CompareToBlacklistRequest $request): JsonResponse
     {
         $elasticSearch = new ElasticsearchGuzzle();
-        $elasticSearch->fuzzySearch();
+        $elasticSearch->findFuzziness();
         return $elasticSearch->jsonResponse();
     }
 

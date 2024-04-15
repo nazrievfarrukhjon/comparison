@@ -24,6 +24,7 @@ Route::namespace('ElasticSearch\Controllers')
             Route::delete('/', [ElasticsearchController::class, 'deleteDocument']);
             Route::put('/', [ElasticsearchController::class, 'updateDocument']);
 
-            Route::put('/search', [ElasticsearchController::class, 'exactSearch']);
+            Route::post('/exact-match', [ElasticsearchController::class, 'exactMatch']);
+            Route::post('/fuzzy-match', [ElasticsearchController::class, 'fuzzyMatch']);
         });
     });
