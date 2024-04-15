@@ -8,6 +8,7 @@ use App\Modules\Elasticsearch\ElasticsearchIndex;
 use App\Modules\Elasticsearch\Requests\AddDocumentRequest;
 use App\Modules\Elasticsearch\Requests\CreateIndexRequest;
 use App\Modules\Elasticsearch\Requests\DocumentRequest;
+use App\Modules\Elasticsearch\Requests\UpdateDocumentRequest;
 use GuzzleHttp\Exception\GuzzleException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -111,12 +112,19 @@ class ElasticsearchController
     /**
      * @throws GuzzleException
      */
-    public function updateDocument(Request $request): void
+    public function updateDocument(UpdateDocumentRequest $request): JsonResponse
     {
-        ElasticsearchGuzzle::init()
-            ->setIndexName($request->input('index_name'))
-            ->setSearchField($request->input('document_name'))
-            ->updateClientInitialsByDocId($request->document_id, $request->new_initials);
+        $elasticsearchIndex = ElasticsearchIndex::newIndexNameAndEsDocumentConstructor(
+            $request->input('index_name'),
+            ElasticsearchDocument::newESGuzzleAndDocAttributesConstructor(
+                new ElasticsearchGuzzle(),
+                $request->all()
+            ),
+        );
+
+        $elasticsearchIndex->updateDocumentByEsId();
+
+        return response()->json(['document updated!']);
     }
 
     /**

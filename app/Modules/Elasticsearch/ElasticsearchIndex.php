@@ -71,4 +71,12 @@ class ElasticsearchIndex
         $this->elasticsearchDocument->delete($this->indexName);
     }
 
+    /**
+     * @throws GuzzleException
+     */
+    public function updateDocumentByEsId(): void
+    {
+        $this->elasticsearchDocument->update($this->indexName);
+    }
+
 }

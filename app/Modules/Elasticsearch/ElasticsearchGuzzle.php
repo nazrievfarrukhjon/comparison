@@ -445,10 +445,10 @@ class ElasticsearchGuzzle
     /**
      * @throws GuzzleException
      */
-    public function updateWithId(array $document, int $id): void
+    public function updateDocById(string $indexName, string $documentId, array $document): void
     {
         $response = $this->guzzle->post(
-            "{$this->hostPort}/{$this->blacklistESConfigs->indexName()}/_doc/{$id}",
+            "{$this->hostPort}/{$indexName}/_doc/{$documentId}",
             [
                 'headers' => $this->headers,
                 'json' => $document

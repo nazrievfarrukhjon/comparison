@@ -22,6 +22,6 @@ Route::namespace('ElasticSearch\Controllers')
             Route::get('/', [ElasticsearchController::class, 'documents']);
             Route::post('/', [ElasticsearchController::class, 'addDocument']);
             Route::delete('/', [ElasticsearchController::class, 'deleteDocument']);
-            Route::put('/{id}', [ElasticsearchController::class, 'updateDoc']);
+            Route::put('/', [ElasticsearchController::class, 'updateDocument']);
         });
     });

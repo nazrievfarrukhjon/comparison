@@ -13,6 +13,7 @@ class ElasticsearchDocument
     private string $documentId;
     private ElasticsearchGuzzle $elasticsearchGuzzle;
     private ElasticsearchIndex $elasticsearchIndex;
+    private array $attributes;
 
     public static function newIndexConstructor(string $indexName): ElasticsearchDocument
     {
@@ -71,6 +72,15 @@ class ElasticsearchDocument
         return $obj;
     }
 
+    public static function newESGuzzleAndDocAttributesConstructor(ElasticsearchGuzzle $elasticsearchGuzzle, array $attributes): ElasticsearchDocument
+    {
+        $obj = new self();
+        $obj->elasticsearchGuzzle = $elasticsearchGuzzle;
+        $obj->attributes = $attributes;
+
+        return $obj;
+    }
+
     /**
      * @throws GuzzleException
      */
@@ -115,6 +125,17 @@ class ElasticsearchDocument
     public function delete(string $indexName): void
     {
         $this->elasticsearchGuzzle->deleteDocument($indexName, $this->documentId);
+    }
+
+    /**
+     * @throws GuzzleException
+     */
+    public function update(string $indexName): void
+    {
+        $document = [
+            'name_combo' => $this->attributes['name_combo']
+        ];
+        $this->elasticsearchGuzzle->updateDocById($indexName, $this->attributes['document_id'], $document);
     }
 
 }
