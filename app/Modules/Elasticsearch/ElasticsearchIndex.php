@@ -12,6 +12,7 @@ class ElasticsearchIndex
 
     private ElasticsearchDocument $elasticsearchDocument;
     private ElasticsearchGuzzle $elasticsearchGuzzle;
+    private string $searchKey;
 
     public static function newIndexNameConstructor(string $indexName): ElasticsearchIndex
     {
@@ -39,6 +40,17 @@ class ElasticsearchIndex
         return $obj;
     }
 
+    public static function newEsGuzzleAndSearchKeyConstructor(
+        ElasticsearchGuzzle $elasticsearchGuzzle,
+        string $searchKey
+    ): ElasticsearchIndex
+    {
+        $obj = new self();
+        $obj->elasticsearchGuzzle = $elasticsearchGuzzle;
+        $obj->searchKey = $searchKey;
+        return $obj;
+    }
+
     /**
      * @throws GuzzleException
      */
@@ -62,21 +74,4 @@ class ElasticsearchIndex
     {
         return $this->indexName;
     }
-
-    /**
-     * @throws GuzzleException
-     */
-    public function deleteDocumentById(): void
-    {
-        $this->elasticsearchDocument->delete($this->indexName);
-    }
-
-    /**
-     * @throws GuzzleException
-     */
-    public function updateDocumentByEsId(): void
-    {
-        $this->elasticsearchDocument->update($this->indexName);
-    }
-
 }

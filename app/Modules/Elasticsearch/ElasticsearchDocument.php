@@ -5,6 +5,18 @@ namespace App\Modules\Elasticsearch;
 use App\Modules\Blacklist\BlacklistESConfigs;
 use GuzzleHttp\Exception\GuzzleException;
 
+/**
+ *
+ * In the context of deleting a document from Elasticsearch, the responsibility typically falls within the DOMAIN of the ElasticsearchDocument class.
+ *
+ * Here's why:
+ *
+ * Responsibility Alignment: The ElasticsearchDocument class represents a specific document within Elasticsearch. It encapsulates the document's data and provides operations related to that document, such as updating, retrieving, and deleting.
+ *
+ * Single Responsibility Principle (SRP): According to the SRP, each class should have a single responsibility. The responsibility of the ElasticsearchDocument class is to manage operations specific to a document, including deletion.
+ *
+ * High Cohesion: The ElasticsearchDocument class should have high cohesion, meaning that it should encapsulate related behaviors and data. Deleting a document is a core operation related to managing a document's lifecycle, and it makes sense for this functionality to be encapsulated within the ElasticsearchDocument class.
+ */
 class ElasticsearchDocument
 {
 
@@ -14,6 +26,7 @@ class ElasticsearchDocument
     private ElasticsearchGuzzle $elasticsearchGuzzle;
     private ElasticsearchIndex $elasticsearchIndex;
     private array $attributes;
+    private string $esDocId;
 
     public static function newIndexConstructor(string $indexName): ElasticsearchDocument
     {
@@ -81,6 +94,27 @@ class ElasticsearchDocument
         return $obj;
     }
 
+    public static function newIndexNameAndEsDocIdAndEsGuzzleConstructor(
+        string              $indexName,
+        string              $esDocId,
+        ElasticsearchGuzzle $elasticsearchGuzzle
+    ): ElasticsearchDocument {
+        $obj = new self();
+        $obj->indexName = $indexName;
+        $obj->elasticsearchGuzzle = $elasticsearchGuzzle;
+        $obj->esDocId = $esDocId;
+
+        return $obj;
+    }
+
+    public static function newEsGuzzleAndAttributesConstructor(ElasticsearchGuzzle $elasticsearchGuzzle, array $attributes): ElasticsearchDocument
+    {
+        $obj = new self();
+        $obj->elasticsearchGuzzle = $elasticsearchGuzzle;
+        $obj->attributes = $attributes;
+        return $obj;
+    }
+
     /**
      * @throws GuzzleException
      */
@@ -105,8 +139,12 @@ class ElasticsearchDocument
      */
     public function add(): void
     {
-        $elasticsearchWithGuzzle = new ElasticsearchGuzzle();
-        $elasticsearchWithGuzzle->add($this->indexName, $this->document);
+        $document = [
+            'id' => $this->attributes['id'],
+            "name_combo" => $this->attributes['name_combo'],
+        ];
+
+        $this->elasticsearchGuzzle->add($this->attributes['index_name'], $document);
     }
 
     /**
@@ -122,20 +160,36 @@ class ElasticsearchDocument
     /**
      * @throws GuzzleException
      */
-    public function delete(string $indexName): void
+    public function deleteByEsId(): void
     {
-        $this->elasticsearchGuzzle->deleteDocument($indexName, $this->documentId);
+        $this->elasticsearchGuzzle->deleteDocument($this->attributes['index_name'], $this->attributes['es_doc_id']);
     }
 
     /**
      * @throws GuzzleException
      */
-    public function update(string $indexName): void
+    public function updateByEsId(): void
     {
         $document = [
             'name_combo' => $this->attributes['name_combo']
         ];
-        $this->elasticsearchGuzzle->updateDocById($indexName, $this->attributes['document_id'], $document);
+        $this->elasticsearchGuzzle->updateDocById(
+            $this->attributes['index_name'],
+            $this->attributes['es_doc_id'],
+            $document
+        );
+    }
+
+    /**
+     * @throws GuzzleException
+     */
+    public function exactMatch(): array
+    {
+        return $this->elasticsearchGuzzle->exactMatch(
+            $this->attributes['index_name'],
+            $this->attributes['document_field'],
+            $this->attributes['search_key']
+        );
     }
 
 }

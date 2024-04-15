@@ -10,7 +10,7 @@ class DocumentRequest extends FormRequest
     {
         return [
             'index_name' => 'required|string|max:30',
-            'document_id' => 'required|string|max:30',
+            'es_doc_id' => 'required|string|max:30',
         ];
     }
 }

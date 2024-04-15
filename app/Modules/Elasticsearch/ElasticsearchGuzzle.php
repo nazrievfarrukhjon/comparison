@@ -267,10 +267,10 @@ class ElasticsearchGuzzle
     /**
      * @throws GuzzleException
      */
-    public function deleteDocument(string$indexName, string $documentId): void
+    public function deleteDocument(string $indexName, string $esDocId): void
     {
         $response = $this->guzzle->delete(
-            "{$this->hostPort}/{$indexName}/_doc/{$documentId}"
+            "{$this->hostPort}/{$indexName}/_doc/{$esDocId}"
         );
 
         $this->result = [$response->getBody()->getContents(), 200];
@@ -392,20 +392,20 @@ class ElasticsearchGuzzle
     }
 
     /**
-     * it extracts the array of results
-     * exactSearchResults[0][_source']['searchKey']
-     *
      * @throws GuzzleException
      */
-    public function exactSearchAndSetResult(string $searchKey): void
-    {
+    public function exactMatch(
+        string $indexName,
+        string $documentField,
+        string $searchKey
+    ): array {
         $response = $this->guzzle->get(
-            "{$this->hostPort}/{$this->blacklistESConfigs->indexName()}/_search",
+            "{$this->hostPort}/{$indexName}/_search",
             [
                 'json' => [
                     'query' => [
                         'term' => [
-                            $this->searchField => $searchKey
+                            $documentField => $searchKey
                         ],
                     ],
                 ],
@@ -415,7 +415,7 @@ class ElasticsearchGuzzle
         $results = json_decode($response->getBody()->getContents(), true);
 
         if (isset($results['hits']['hits']) && count($results['hits']['hits']) > 0) {
-            $this->result = $results['hits']['hits'];
+            return $results['hits']['hits'];
         }
     }
 
@@ -465,10 +465,6 @@ class ElasticsearchGuzzle
     public function jsonResponse(): JsonResponse
     {
         return response()->json(['result' => $this->result], 200);
-    }
-
-    public function addDocument(string $indexName, array $indexSettings)
-    {
     }
 
 }

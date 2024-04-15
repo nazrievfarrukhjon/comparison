@@ -8,6 +8,7 @@ use App\Modules\Elasticsearch\ElasticsearchIndex;
 use App\Modules\Elasticsearch\Requests\AddDocumentRequest;
 use App\Modules\Elasticsearch\Requests\CreateIndexRequest;
 use App\Modules\Elasticsearch\Requests\DocumentRequest;
+use App\Modules\Elasticsearch\Requests\ExactSearchRequest;
 use App\Modules\Elasticsearch\Requests\UpdateDocumentRequest;
 use GuzzleHttp\Exception\GuzzleException;
 use Illuminate\Http\JsonResponse;
@@ -65,14 +66,9 @@ class ElasticsearchController
      */
     public function addDocument(AddDocumentRequest $request): JsonResponse
     {
-        $document = [
-            'id' => $request->id,
-            "name_combo" => $request->input('name_combo'),
-        ];
-
-        $elasticsearchDocument = ElasticsearchDocument::newIndexAndDocumentConstructor(
-            $request->input('index_name'),
-            $document
+        $elasticsearchDocument = ElasticsearchDocument::newEsGuzzleAndAttributesConstructor(
+            new ElasticsearchGuzzle(),
+            $request->all()
         );
         $elasticsearchDocument->add();
 
@@ -93,18 +89,25 @@ class ElasticsearchController
 
     /**
      * @throws GuzzleException
+     *
+     * In the context of deleting a document from Elasticsearch, the responsibility typically falls within the domain of the ElasticsearchDocument class.
+     *
+     * Here's why:
+     *
+     * Responsibility Alignment: The ElasticsearchDocument class represents a specific document within Elasticsearch. It encapsulates the document's data and provides operations related to that document, such as updating, retrieving, and deleting.
+     *
+     * Single Responsibility Principle (SRP): According to the SRP, each class should have a single responsibility. The responsibility of the ElasticsearchDocument class is to manage operations specific to a document, including deletion.
+     *
+     * High Cohesion: The ElasticsearchDocument class should have high cohesion, meaning that it should encapsulate related behaviors and data. Deleting a document is a core operation related to managing a document's lifecycle, and it makes sense for this functionality to be encapsulated within the ElasticsearchDocument class.
      */
     public function deleteDocument(DocumentRequest $request): JsonResponse
     {
-        $elasticsearchIndex = ElasticsearchIndex::newIndexNameAndEsDocumentConstructor(
-            $request->input('index_name'),
-            ElasticsearchDocument::newESGuzzleDocumentIdConstructor(
-                new ElasticsearchGuzzle(),
-                $request->document_id
-            ),
+        $elasticsearchDocument = ElasticsearchDocument::newEsGuzzleAndAttributesConstructor(
+            new ElasticsearchGuzzle(),
+            $request->all()
         );
 
-        $elasticsearchIndex->deleteDocumentById();
+        $elasticsearchDocument->deleteByEsId();
 
         return response()->json(['document deleted!']);
     }
@@ -114,15 +117,12 @@ class ElasticsearchController
      */
     public function updateDocument(UpdateDocumentRequest $request): JsonResponse
     {
-        $elasticsearchIndex = ElasticsearchIndex::newIndexNameAndEsDocumentConstructor(
-            $request->input('index_name'),
-            ElasticsearchDocument::newESGuzzleAndDocAttributesConstructor(
-                new ElasticsearchGuzzle(),
-                $request->all()
-            ),
+        $elasticsearchDocument = ElasticsearchDocument::newEsGuzzleAndAttributesConstructor(
+            new ElasticsearchGuzzle(),
+            $request->all()
         );
 
-        $elasticsearchIndex->updateDocumentByEsId();
+        $elasticsearchDocument->updateByEsId();
 
         return response()->json(['document updated!']);
     }
@@ -242,15 +242,16 @@ class ElasticsearchController
     /**
      * @throws GuzzleException
      */
-    public function exactSearch(ExactSearchRequest $request): array
+    public function exactSearch(ExactSearchRequest $request): JsonResponse
     {
-        return ElasticBuilder::init()
-            ->setIndexName($request->input('index_name'))
-            ->setSearchField($request->input('document_name'))
-            // it extracts the array of results and sets to exactSearchResults which can be used like
-            // exactSearchResults[0][_source']['initials']
-            ->exactSearchAndSetResult($request->input('search_key'))
-            ->getExactSearchResult();
+        $elasticsearchDocument = ElasticsearchDocument::newEsGuzzleAndAttributesConstructor(
+            new ElasticsearchGuzzle(),
+            $request->all()
+        );
+
+        $exactMatch = $elasticsearchDocument->exactMatch();
+
+        return response()->json($exactMatch);
     }
 
 }

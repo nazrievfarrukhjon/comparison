@@ -35,3 +35,16 @@ Contributions to this project are welcome. Feel free to fork the repository, mak
 ## License:
 
 This project is licensed under the [MIT License](LICENSE).
+
+
+## Choosing class which will encapsulate others and first fire action
+
+In the context of deleting a document from Elasticsearch, the responsibility typically falls within the domain of the ElasticsearchDocument class.
+
+Here's why:
+
+Responsibility Alignment: The ElasticsearchDocument class represents a specific document within Elasticsearch. It encapsulates the document's data and provides operations related to that document, such as updating, retrieving, and deleting.
+
+Single Responsibility Principle (SRP): According to the SRP, each class should have a single responsibility. The responsibility of the ElasticsearchDocument class is to manage operations specific to a document, including deletion.
+
+High Cohesion: The ElasticsearchDocument class should have high cohesion, meaning that it should encapsulate related behaviors and data. Deleting a document is a core operation related to managing a document's lifecycle, and it makes sense for this functionality to be encapsulated within the ElasticsearchDocument class.
