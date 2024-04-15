@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 
 // frauds
 Route::namespace('Blacklist\Controllers')
+    ->middleware(['auth:sanctum'])
     ->prefix('blacklist')
     ->group(function () {
         Route::get('/', [BlacklistController::class, 'index']);

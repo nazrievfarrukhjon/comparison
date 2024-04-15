@@ -3,10 +3,11 @@
 namespace App\Modules\Elasticsearch\Controllers;
 
 use App\Modules\Elasticsearch\ElasticsearchDocument;
-use App\Modules\Elasticsearch\ElasticsearchWithGuzzle;
-use App\Modules\Elasticsearch\IndicesOfElasticsearch;
+use App\Modules\Elasticsearch\ElasticsearchGuzzle;
+use App\Modules\Elasticsearch\ElasticsearchIndex;
 use App\Modules\Elasticsearch\Requests\AddDocumentRequest;
 use App\Modules\Elasticsearch\Requests\CreateIndexRequest;
+use App\Modules\Elasticsearch\Requests\DocumentRequest;
 use GuzzleHttp\Exception\GuzzleException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -68,7 +69,10 @@ class ElasticsearchController
             "name_combo" => $request->input('name_combo'),
         ];
 
-        $elasticsearchDocument = ElasticsearchDocument::newIndexAndDocumentConstructor($request->input('index_name'), $document);
+        $elasticsearchDocument = ElasticsearchDocument::newIndexAndDocumentConstructor(
+            $request->input('index_name'),
+            $document
+        );
         $elasticsearchDocument->add();
 
         return response()->json(['document stored!']);
@@ -91,11 +95,17 @@ class ElasticsearchController
      */
     public function deleteDocument(DocumentRequest $request): JsonResponse
     {
-        list($response, $status) = ElasticBuilder::init()
-            ->setIndexName($request->input('index_name'))
-            ->deleteDocument($request->input('document_id'));
+        $elasticsearchIndex = ElasticsearchIndex::newIndexNameAndEsDocumentConstructor(
+            $request->input('index_name'),
+            ElasticsearchDocument::newESGuzzleDocumentIdConstructor(
+                new ElasticsearchGuzzle(),
+                $request->document_id
+            ),
+        );
 
-        return response()->json($response, $status);
+        $elasticsearchIndex->deleteDocumentById();
+
+        return response()->json(['document deleted!']);
     }
 
     /**
@@ -103,7 +113,7 @@ class ElasticsearchController
      */
     public function updateDocument(Request $request): void
     {
-        ElasticsearchWithGuzzle::init()
+        ElasticsearchGuzzle::init()
             ->setIndexName($request->input('index_name'))
             ->setSearchField($request->input('document_name'))
             ->updateClientInitialsByDocId($request->document_id, $request->new_initials);
@@ -142,7 +152,7 @@ class ElasticsearchController
     public function createIndex(CreateIndexRequest $request): JsonResponse
     {
         $indexName = $request->input('index_name');
-        $indicesOfElasticsearch = new IndicesOfElasticsearch($indexName);
+        $indicesOfElasticsearch = new ElasticsearchIndex($indexName);
         $indicesOfElasticsearch->store();
 
         return response()->json(['index created']);
@@ -195,7 +205,7 @@ class ElasticsearchController
      */
     public function indices(): JsonResponse
     {
-        $indicesOfElasticsearch = IndicesOfElasticsearch::newWithNoArg();
+        $indicesOfElasticsearch = ElasticsearchIndex::newWithNoArg();
         $indices = $indicesOfElasticsearch->indices();
 
         return response()->json(['indices' => $indices]);

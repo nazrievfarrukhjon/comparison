@@ -4,6 +4,7 @@ use App\Modules\Elasticsearch\Controllers\ElasticsearchController;
 use Illuminate\Support\Facades\Route;
 
 Route::namespace('ElasticSearch\Controllers')
+    ->middleware(['auth:sanctum'])
     ->prefix('elasticsearch')
     ->group(function () {
         Route::prefix('index')->group(function () {
@@ -20,7 +21,7 @@ Route::namespace('ElasticSearch\Controllers')
         Route::prefix('document')->group(function () {
             Route::get('/', [ElasticsearchController::class, 'documents']);
             Route::post('/', [ElasticsearchController::class, 'addDocument']);
-            Route::delete('/{id}', [ElasticsearchController::class, 'deleteDoc']);
+            Route::delete('/', [ElasticsearchController::class, 'deleteDocument']);
             Route::put('/{id}', [ElasticsearchController::class, 'updateDoc']);
         });
     });

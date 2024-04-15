@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 
 // frauds
 Route::namespace('Whitelist\Controllers')
+    ->middleware(['auth:sanctum'])
     ->prefix('whitelist')
     ->group(function () {
         Route::get('/', [WhitelistController::class, 'index']);

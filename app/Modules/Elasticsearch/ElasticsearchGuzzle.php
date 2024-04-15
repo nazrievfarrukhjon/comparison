@@ -8,7 +8,7 @@ use GuzzleHttp\Exception\GuzzleException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
 
-class ElasticsearchWithGuzzle
+class ElasticsearchGuzzle
 {
     private string $hostPort;
 
@@ -18,7 +18,10 @@ class ElasticsearchWithGuzzle
 
     private array $result;
 
-    private int $requestStatus;
+    private string $indexName;
+    private string $documentId;
+    private ElasticsearchDocument $elasticsearchDocument;
+    private ElasticsearchIndex $elasticsearchIndex;
 
     public function __construct()
     {
@@ -32,6 +35,38 @@ class ElasticsearchWithGuzzle
             'Accept' => 'application/json',
             'Content-Type' => 'application/json'
         ];
+    }
+
+    public static function newIndexAndDocumentIdConstructor(string $indexName, string $documentId): ElasticsearchGuzzle
+    {
+        $obj = new self();
+        $obj->indexName = $indexName;
+        $obj->documentId = $documentId;
+
+        return $obj;
+    }
+
+    public static function newESIndexConstructor(ElasticsearchIndex $elasticsearchIndex): ElasticsearchGuzzle
+    {
+        $obj = new self();
+        $obj->elasticsearchIndex = $elasticsearchIndex;
+
+        return $obj;
+    }
+
+    public static function newDocumentConstructor(ElasticsearchDocument $elasticsearchDocument): ElasticsearchGuzzle
+    {
+        $obj = new self();
+        $obj->elasticsearchDocument = $elasticsearchDocument;
+        return $obj;
+    }
+
+    public static function newIndexNameConstructor(string $indexName): ElasticsearchGuzzle
+    {
+        $obj = new self();
+        $obj->indexName = $indexName;
+
+        return $obj;
     }
 
     /**
@@ -232,10 +267,10 @@ class ElasticsearchWithGuzzle
     /**
      * @throws GuzzleException
      */
-    public function deleteDocument(string $documentId): void
+    public function deleteDocument(string$indexName, string $documentId): void
     {
         $response = $this->guzzle->delete(
-            "{$this->hostPort}/{$this->blacklistESConfigs->indexName()}/_doc/{$documentId}"
+            "{$this->hostPort}/{$indexName}/_doc/{$documentId}"
         );
 
         $this->result = [$response->getBody()->getContents(), 200];

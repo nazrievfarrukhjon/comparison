@@ -3,9 +3,8 @@
 namespace App\Modules\Blacklist\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Modules\Blacklist\BlacklistESConfigs;
 use App\Modules\Blacklist\Requests\CompareToBlacklistRequest;
-use App\Modules\Elasticsearch\ElasticsearchWithGuzzle;
+use App\Modules\Elasticsearch\ElasticsearchGuzzle;
 use GuzzleHttp\Exception\GuzzleException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -70,7 +69,7 @@ class BlacklistController extends Controller
      */
     public function find(CompareToBlacklistRequest $request): JsonResponse
     {
-        $elasticSearch = new ElasticsearchWithGuzzle();
+        $elasticSearch = new ElasticsearchGuzzle();
         $elasticSearch->fuzzySearch();
         return $elasticSearch->jsonResponse();
     }

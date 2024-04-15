@@ -10,6 +10,9 @@ class ElasticsearchDocument
 
     private string $indexName;
     private array $document;
+    private string $documentId;
+    private ElasticsearchGuzzle $elasticsearchGuzzle;
+    private ElasticsearchIndex $elasticsearchIndex;
 
     public static function newIndexConstructor(string $indexName): ElasticsearchDocument
     {
@@ -28,9 +31,44 @@ class ElasticsearchDocument
         return $obj;
     }
 
+    public static function newElasticsearchGuzzleAndDocIdConstructor(ElasticsearchGuzzle $elasticsearchGuzzle, string $documentId): ElasticsearchDocument
+    {
+        $obj = new self();
+        $obj->elasticsearchGuzzle = $elasticsearchGuzzle;
+        $obj->documentId = $documentId;
+
+        return $obj;
+    }
+
+
+    public static function newIndexAndDocumentIdConstructor(ElasticsearchIndex $elasticsearchIndex, string $documentId): ElasticsearchDocument
+    {
+        $obj = new self();
+        $obj->elasticsearchIndex = $elasticsearchIndex;
+        $obj->documentId = $documentId;
+
+        return $obj;
+    }
+
     public static function newDefaultConstructor(): ElasticsearchDocument
     {
         return new self();
+    }
+
+    public static function newDocumentIdConstructor(string $documentId): ElasticsearchDocument
+    {
+        $obj = new self();
+        $obj->documentId = $documentId;
+        return $obj;
+    }
+
+    public static function newESGuzzleDocumentIdConstructor(ElasticsearchGuzzle $elasticsearchGuzzle, string $documentId): ElasticsearchDocument
+    {
+        $obj = new self();
+        $obj->elasticsearchGuzzle = $elasticsearchGuzzle;
+        $obj->documentId = $documentId;
+
+        return $obj;
     }
 
     /**
@@ -38,7 +76,7 @@ class ElasticsearchDocument
      */
     public function store(): void
     {
-        $elasticsearchWithGuzzle = new ElasticsearchWithGuzzle();
+        $elasticsearchWithGuzzle = new ElasticsearchGuzzle();
         $blacklistESConfigs = new BlacklistESConfigs();
         $elasticsearchWithGuzzle->createIndex($this->indexName, $blacklistESConfigs->indexSettings());
     }
@@ -48,7 +86,7 @@ class ElasticsearchDocument
      */
     public function indices(): array
     {
-        $elasticsearchWithGuzzle = new ElasticsearchWithGuzzle();
+        $elasticsearchWithGuzzle = new ElasticsearchGuzzle();
         return $elasticsearchWithGuzzle->indices();
     }
 
@@ -57,7 +95,7 @@ class ElasticsearchDocument
      */
     public function add(): void
     {
-        $elasticsearchWithGuzzle = new ElasticsearchWithGuzzle();
+        $elasticsearchWithGuzzle = new ElasticsearchGuzzle();
         $elasticsearchWithGuzzle->add($this->indexName, $this->document);
     }
 
@@ -66,9 +104,17 @@ class ElasticsearchDocument
      */
     public function indexContent(): array
     {
-        $elasticsearchWithGuzzle = new ElasticsearchWithGuzzle();
+        $elasticsearchWithGuzzle = new ElasticsearchGuzzle();
 
         return $elasticsearchWithGuzzle->indexContent($this->indexName);
+    }
+
+    /**
+     * @throws GuzzleException
+     */
+    public function delete(string $indexName): void
+    {
+        $this->elasticsearchGuzzle->deleteDocument($indexName, $this->documentId);
     }
 
 }
